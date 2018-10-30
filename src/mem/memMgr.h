@@ -47,11 +47,11 @@ private:                                                                    \
 //
 // To promote 't' to the nearest multiple of SIZE_T; 
 // e.g. Let SIZE_T = 8;  toSizeT(7) = 8, toSizeT(12) = 16
-#define toSizeT(t)      0  // TODO
+#define toSizeT(t)      ( (t%(SIZE_T)) ? (  SIZE_T * ( t / (SIZE_T) ) + SIZE_T ) : t ) // TODO ...done 10/30 12:50
 //
 // To demote 't' to the nearest multiple of SIZE_T
 // e.g. Let SIZE_T = 8;  downtoSizeT(9) = 8, downtoSizeT(100) = 96
-#define downtoSizeT(t)  0  // TODO
+#define downtoSizeT(t)  ( t - ( t% ( SIZE_T ) ) )  // TODO ...done 10/30 12:51
 
 // R_SIZE is the size of the recycle list
 #define R_SIZE 256
