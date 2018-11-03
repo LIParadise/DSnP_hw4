@@ -4,7 +4,7 @@
   Synopsis     [ Define memory test command classes ]
   Author       [ Chung-Yang (Ric) Huang ]
   Copyright    [ Copyleft(c) 2007-present LaDs(III), GIEE, NTU, Taiwan ]
-****************************************************************************/
+ ****************************************************************************/
 #ifndef MEM_CMD_H
 #define MEM_CMD_H
 
