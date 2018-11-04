@@ -79,6 +79,87 @@ MTResetCmd::help() const
 MTNewCmd::exec(const string& option)
 {
   // TODO
+  vector<string> tok_vec;
+  string temp;
+  size_t pos = 0;
+  do{
+    pos = myStrGetTok( option, temp, pos, ' ' );
+    if( ! temp.empty () ){
+      tok_vec.push_back( temp );
+    }
+  }while ( pos != string :: npos );
+  // tok_vec now stores tokenized "const string& option"
+
+  if( tok_vec.size() == 1 ){
+    return CmdExec::errorOption( CMD_OPT_MISSING, "" );
+  }
+
+
+  // tok_vec.size() >= 2;
+  int size_per_arr = 0;
+  int arr_cnt = 0;
+  int flag = 0;
+
+  if( myStr2Int( tok_vec[1], size_per_arr ) ){ // "mtn x -a y" or "mtn x";
+    if( tok_vec.size() == 2 ){
+      mtest.newObjs( size_per_arr );
+      return CMD_EXEC_DONE;
+    }else{ // tok_vec.size() >= 3;
+      // check if "-Array" is specified.
+
+      flag = myStrNCmp( "-Array", tok_vec[2], 2 );
+      if( flag != 0 ){
+        // extra option
+        return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[2] );
+      }else{
+        // check arr_cnt;
+        // tok_vec[2] matches "-Array";
+        // "mtn x -a"...
+
+        if( tok_vec.size() == 3 ){
+          return CmdExec::errorOption( CMD_OPT_MISSING, tok_vec[2] );
+        }else{ // tok_vec.size() >= 4;
+          if( !myStr2Int( tok_vec[3], arr_cnt )){
+            return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[3] );
+          }else{
+            if( tok_vec.size() >= 5 ){
+              return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[4] );
+            }else{
+              mtest.newArrs( arr_cnt, size_per_arr );
+              return CMD_EXEC_DONE;
+            }
+          } // end of ( tok_vec[3] is a number );
+        } // end of ( tok_vec.size() >= 4 );
+      } // end of ( flag == 0 ), "mtn -x -a ..."
+    } // end of (tok_vec.size() >= 3 );
+  }else{ // end of "mtn x ..."; shall be "mtn tok ..."
+    
+    flag = myStrNCmp( "-Array", tok_vec[1], 2 );
+    if( flag != 0 ){
+      return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[1] );
+    }else{ // "mtn -a ..."
+      if( tok_vec.size() == 2 ){
+        return CmdExec::errorOption( CMD_OPT_MISSING, tok_vec[1] );
+      }else if( tok_vec.size () == 3 ){
+        return CmdExec::errorOption( CMD_OPT_MISSING, "" );
+      }else{ // tok_vec.size() >= 4
+        if( ! myStr2Int( tok_vec[2], arr_cnt ) ){
+          return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[2] );
+        }
+        if( !myStr2Int( tok_vec[3], size_per_arr )){
+          return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[3] );
+        }
+        // "const string& option" shall be "mtn -a x y ..." now
+        if( tok_vec.size() >= 5 ){
+          return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[4] );
+        }else{
+          mtest.newArrs( arr_cnt, size_per_arr );
+        }
+      }// end of (tok_vec.size() >= 4 )
+    }// end of ( option == "mtn -a ..." );
+  }
+
+
 
   // Use try-catch to catch the bad_alloc exception
   return CMD_EXEC_DONE;

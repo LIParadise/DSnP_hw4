@@ -336,10 +336,13 @@ class MemMgr
       //    cerr << "Requested memory (" << t << ") is greater than block size"
       //         << "(" << _blockSize << "). " << "Exception raised...\n";
       // TODO done 1104 1520
-      if( t > _blockSize ){
+      try{
+        if( t > _blockSize ){
+          throw bad_alloc();
+        }
+      }catch ( bad_alloc& bd ){
         cerr << "Requested memory (" << t << ") is greater than block size"
-        << "(" << _blockSize << "). " << "Exception raised...\n";
-        throw bad_alloc();
+          << "(" << _blockSize << "). " << "Exception raised...\n";
       }
 
       // 3. Check the _recycleList first...
