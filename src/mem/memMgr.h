@@ -350,6 +350,10 @@ class MemMgr
 #ifdef MEM_DEBUG
       cout << "Recycled from _recycleList[" << n << "]..." << ret << endl;
 #endif // MEM_DEBUG
+      MemRecycleList<T>* mem_re_list_ptr = getMemRecycleList(n);
+      if( mem_re_list_ptr-> _first != nullptr ){
+        return mem_re_list_ptr -> popFront();
+      }
 
       // If no match from recycle list...
       // 4. Get the memory from _activeBlock

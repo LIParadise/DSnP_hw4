@@ -427,12 +427,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 184 - ((23 * winheight(0) + 23) / 47)
+let s:l = 322 - ((18 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-184
-normal! 0
+322
+normal! 08|
 wincmd w
 argglobal
 edit src/mem/memMgr.h
