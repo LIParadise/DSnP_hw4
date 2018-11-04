@@ -78,7 +78,7 @@ MTResetCmd::help() const
   CmdExecStatus
 MTNewCmd::exec(const string& option)
 {
-  // TODO
+  // TODO done 1104 2136
   vector<string> tok_vec;
   string temp;
   size_t pos = 0;
@@ -104,7 +104,7 @@ MTNewCmd::exec(const string& option)
     if( tok_vec.size() == 2 ){
       mtest.newObjs( size_per_arr );
       return CMD_EXEC_DONE;
-    }else{ // tok_vec.size() >= 3;
+    }else{ // tok_vec.size() >= 3; "mtn x ...";
       // check if "-Array" is specified.
 
       flag = myStrNCmp( "-Array", tok_vec[2], 2 );
@@ -112,13 +112,13 @@ MTNewCmd::exec(const string& option)
         // extra option
         return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[2] );
       }else{
-        // check arr_cnt;
-        // tok_vec[2] matches "-Array";
+        // tok_vec[2] matches "-Array", check arr_cnt;
         // "mtn x -a"...
 
         if( tok_vec.size() == 3 ){
+          // "mtn x -a"
           return CmdExec::errorOption( CMD_OPT_MISSING, tok_vec[2] );
-        }else{ // tok_vec.size() >= 4;
+        }else{ // tok_vec.size() >= 4; "mtn x -a str" where str != "";
           if( !myStr2Int( tok_vec[3], arr_cnt )){
             return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[3] );
           }else{
@@ -128,7 +128,7 @@ MTNewCmd::exec(const string& option)
               mtest.newArrs( arr_cnt, size_per_arr );
               return CMD_EXEC_DONE;
             }
-          } // end of ( tok_vec[3] is a number );
+          } // end of if (tok_vec[3] is a number );
         } // end of ( tok_vec.size() >= 4 );
       } // end of ( flag == 0 ), "mtn -x -a ..."
     } // end of (tok_vec.size() >= 3 );
@@ -141,7 +141,13 @@ MTNewCmd::exec(const string& option)
       if( tok_vec.size() == 2 ){
         return CmdExec::errorOption( CMD_OPT_MISSING, tok_vec[1] );
       }else if( tok_vec.size () == 3 ){
-        return CmdExec::errorOption( CMD_OPT_MISSING, "" );
+        if( ! myStr2Int( tok_vec.back(), arr_cnt ) ){
+          // "mtn -a not_a_num"
+          return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec.back() );
+        }else{
+          // "mtn -a x"
+          return CmdExec::errorOption( CMD_OPT_MISSING, "" );
+        }
       }else{ // tok_vec.size() >= 4
         if( ! myStr2Int( tok_vec[2], arr_cnt ) ){
           return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[2] );
@@ -158,8 +164,6 @@ MTNewCmd::exec(const string& option)
       }// end of (tok_vec.size() >= 4 )
     }// end of ( option == "mtn -a ..." );
   }
-
-
 
   // Use try-catch to catch the bad_alloc exception
   return CMD_EXEC_DONE;
@@ -186,6 +190,142 @@ MTNewCmd::help() const
 MTDeleteCmd::exec(const string& option)
 {
   // TODO
+
+  enum _method{
+    dummy = 0,
+    index = 1,
+    random = 2,
+    error = 3
+  } method;
+  method = dummy;
+  int flag = -1;
+  int count = 0;
+  size_t arr_tok_idx = 0;  // index for token "-Array" in tok_vec_org;
+  size_t idx_tok_idx = 0;  // index for token "-Index" in tok_vec_org;
+  size_t rn__tok_idx = 0;  // index for token "-Random" in tok_vec_org;
+  size_t cnt_tok_idx = 0;  // index for token "objId", "numRandId" in tok_vec_org;
+  bool array = false;
+
+  vector<string> tok_vec;
+  string temp;
+  size_t pos = 0;
+  do{
+    pos = myStrGetTok( option, temp, pos, ' ' );
+    if( ! temp.empty () ){
+      tok_vec.push_back( temp );
+    }
+  }while ( pos != string :: npos );
+  // tok_vec now stores tokenized "const string& option"
+
+  if( tok_vec.size() == 1 ){
+    return CmdExec::errorOption( cmd_opt_missing, "" );
+  }
+
+  vector<string> tok_vec_org = tok_vec;
+
+  for( size_t i = 1; i < tok_vec.size(); ++i ){
+    flag = myStrNCmp( "-Index", tok_vec[i], 2 );
+    if( flag == 0 && tok_vec.size() > (i+1) ){
+      if( myStr2Int( tok_vec[i+1], count ) ){
+        method = index;
+        tok_vec.erase(i+1);
+        tok_vec.erase(i);
+        idx_tok_idx = i;
+        cnt_tok_idx = (i+1);
+        break;
+      }
+      tok_vec.erase(i);
+      method = error;
+      break;
+    }
+  }
+
+  if( method == dummy ){
+    for( size_t i = 1; i < tok_vec.size(); ++i ){
+      flag = myStrNCmp( "-Random", tok_vec[i], 2 );
+      if( flag == 0 && tok_vec.size() > (i+1) ){
+        if( myStr2Int( tok_vec[i+1], count ) ){
+          method = random;
+          tok_vec.erase(i+1);
+          tok_vec.erase(i);
+          rn__tok_idx = i;
+          cnt_tok_idx = (i+1);
+          break;
+        }
+        tok_vec.erase(i);
+        method = error;
+        break;
+      }
+    }
+  }
+
+  if( method == index || method == random ){
+    _method method_bak = method;
+    method = error;
+    for( size_t i = 1; i < tok_vec.size(); ++i ){
+      flag = myStrNCmp( "-Array", tok_vec[i], 2 );
+      if( flag == 0 ){
+        array = true;
+        method = method_bak;
+        tok_vec.erase[i];
+        arr_tok_idx = i;
+        break;
+      }
+    }
+  }
+
+  if( method == index || method == random ){
+    if( tok_vec.size () == 1 ){
+
+      if( method == index ){
+        if( array ){
+          if( mtest.getArrListSize() > count ){
+            // command parsing okay; just delete.
+            mtest.deleteArr( count );
+          }else{
+            cerr << "Size of array list (" << mtest.getArrListSize()
+              << ") is <= " << count << "!!" << endl;
+            return CmdExec::errorOption(CMD_OPT_ILLEGAL,tok_vec_org[cnt_tok_idx]);
+          }
+        }else{ // "-Array" not specified, check _objList;
+          if( mtest.getObjListSize() > count ){
+            // command parsing okay; just delete.
+            mtest.deleteObj( count );
+          }else{
+            cerr << "Size of object list (" << mtest.getObjListSize()
+              << ") is <= " << count << "!!" << endl;
+            return CmdExec::errorOption(CMD_OPT_ILLEGAL,tok_vec_org[cnt_tok_idx]);
+          }
+        } // if(array) else {}
+      } else { // method == random 
+
+        if( array) {
+          if( mtest.getArrListSize() == 0 ){
+            cerr << "Size of array list is 0!!" << endl;
+            return CmdExec::errorOption(CMD_OPT_ILLEGAL,tok_vec_org[rn__tok_idx]);
+          }else{
+            for( size_t i = 0; i < count; ++i ){
+              mtest.deleteArr( rnGen( mtest.getArrListSize() ) );
+            }
+          }
+        }else {
+          if( mtest.getObjListSize() == 0 ){
+            cerr << "Size of object list is 0!!" << endl;
+            return CmdExec::errorOption(CMD_OPT_ILLEGAL,tok_vec_org[rn__tok_idx]);
+          }else{
+            for( size_t i = 0; i < count; ++i ){
+              mtest.deleteObj( rnGen( mtest.getObjListSize() ) );
+            }
+          }
+        }
+      }
+    } else { // tok_vec.size() != 1
+      method = error;
+    }
+  }
+
+
+
 
   return CMD_EXEC_DONE;
 }

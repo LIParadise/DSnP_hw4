@@ -342,7 +342,7 @@ class MemMgr
         }
       }catch ( bad_alloc& bd ){
         cerr << "Requested memory (" << t << ") is greater than block size"
-          << "(" << _blockSize << "). " << "Exception raised...\n";
+          << "(" << _blockSize << "). Exception raised...\n";
       }
 
       // 3. Check the _recycleList first...
