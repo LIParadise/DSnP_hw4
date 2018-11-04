@@ -35,6 +35,34 @@ class MemMgr
 
 
 
+template <class T>
+class MemBlock
+{
+  friend class MemMgr<T>;
+
+  // Constructor/Destructor
+  MemBlock(MemBlock<T>* n, size_t b) : _nextBlock(n) {
+    _begin = _ptr = new char[b]; _end = _begin + b; }
+  ~MemBlock() { delete [] _begin; }
+
+  // Member functions
+  void reset() { _ptr = _begin; }
+  bool getMem(size_t t, T*& ret) {
+    // TODO ... done 1104 020;
+  size_t getRemainSize() const { return size_t(_end - _ptr); }
+
+  MemBlock<T>* getNextBlock() const { return _nextBlock; }
+
+  // Data members
+  char*             _begin;
+  char*             _ptr;
+  char*             _end;
+  MemBlock<T>*      _nextBlock;
+};
+
+
+
+
 
 
 template <class T>
