@@ -192,19 +192,31 @@ MTDeleteCmd::exec(const string& option)
   // TODO
 
   enum _method{
-    dummy = 0,
-    index = 1,
-    random = 2,
-    error = 3
+    dummy = 0;
+    index = 1;
+    rndom = 2;
+    error = 3;
   } method;
+
+  enum _error_msg{
+    okay = 0;
+    arr_size_0    = 1;
+    idx_size_0    = 2;
+    no_method     = 3;
+    no_index_num  = 4;      // x in "-Index x" missing
+    no_rndom_num  = 5;      // y in "-Random y" missing
+    just_an_error = 6;
+  } error_msg;
+
   method = dummy;
-  int flag = -1;
-  int count = 0;
+  error_msg = okay;
+  bool array = false;
+  int  count = 0;          // for 'x' in "-Index x" or "-Random x"
+  int  flag  = 0;          // used in util.h::myStrNCmp
   size_t arr_tok_idx = 0;  // index for token "-Array" in tok_vec_org;
   size_t idx_tok_idx = 0;  // index for token "-Index" in tok_vec_org;
   size_t rn__tok_idx = 0;  // index for token "-Random" in tok_vec_org;
   size_t cnt_tok_idx = 0;  // index for token "objId", "numRandId" in tok_vec_org;
-  bool array = false;
 
   vector<string> tok_vec;
   string temp;
@@ -223,43 +235,79 @@ MTDeleteCmd::exec(const string& option)
 
   vector<string> tok_vec_org = tok_vec;
 
+  /* 
+     use tok_vec to get required information, including that about error.
+
+     first, use one loop to get required flags and subsidiary "int count",
+     and set corresponding positions in tok_vec to "";
+     e.g.: "mtd hello_world -ra 3 bump_of_chicken"
+     we get "-ra 3", and set tok_vec to '"mtd" "hello_world" "" "" "bump_of_chicken"';
+
+     second, use one loop to get "-Array" flag, similar to the method in first step.
+
+     finally, we have already set up "bool error" flag,
+     try to find the error in tok_vec accordingly.
+     */
+
+  // first step, we try "-Index x" here.
   for( size_t i = 1; i < tok_vec.size(); ++i ){
     flag = myStrNCmp( "-Index", tok_vec[i], 2 );
-    if( flag == 0 && tok_vec.size() > (i+1) ){
-      if( myStr2Int( tok_vec[i+1], count ) ){
-        method = index;
-        tok_vec.erase(i+1);
-        tok_vec.erase(i);
-        idx_tok_idx = i;
-        cnt_tok_idx = (i+1);
+    if( flag == 0 ){
+      tok_vec[i]  = "";
+      idx_tok_idx = i;
+      if( i == tok_vec.size() - 1 ){
+        error_msg = no_index_num;
+        method = error;
         break;
-      }
-      tok_vec.erase(i);
-      method = error;
-      break;
-    }
+      }else{
+        if( myStr2Int( tok_vec[i+1], count ) ){ // "-Index x" found
+          method = index;
+          error_msg = okay;
+          cnt_tok_idx = i+1;
+          tok_vec[i+1] = "";
+          break;
+        }else{
+          // "-Index tok" where "tok" is not a valid number;
+          error_msg = no_index_num;
+          method = error;
+          break;
+        }
+      } // if( i == tok_vec.size() -1 ) else {}
+    }// if "-Index"
   }
 
+  // first step, we try "-Random x" here.
   if( method == dummy ){
     for( size_t i = 1; i < tok_vec.size(); ++i ){
       flag = myStrNCmp( "-Random", tok_vec[i], 2 );
-      if( flag == 0 && tok_vec.size() > (i+1) ){
-        if( myStr2Int( tok_vec[i+1], count ) ){
-          method = random;
-          tok_vec.erase(i+1);
-          tok_vec.erase(i);
-          rn__tok_idx = i;
-          cnt_tok_idx = (i+1);
+      if( flag == 0 ){
+        tok_vec[i]  = "";
+        rn__tok_idx = i;
+        if( i == tok_vec.size() - 1 ){
+          error_msg = no_rndom_num;
+          method = error;
           break;
-        }
-        tok_vec.erase(i);
-        method = error;
-        break;
-      }
-    }
-  }
+        }else{
+          if( myStr2Int( tok_vec[i+1], count ) ){ // "-Random x" found
+            method = rndom;
+            error_msg = okay;
+            cnt_tok_idx = i+1;
+            tok_vec[i+1] = "";
+            break;
+          }else{
+            // "-Index tok" where "tok" is not a valid number;
+            error_msg = no_rndom_num;
+            method = error;
+            break;
+          }
+        } // if( i == tok_vec.size() -1 ) else {}
+      }// if "-Random"
+    } // for loop
+  }// if ( method == dummy );
 
-  if( method == index || method == random ){
+
+  // second, use loop to get "-Array" flag
+  if( method == index || method == rndom ){
     _method method_bak = method;
     method = error;
     for( size_t i = 1; i < tok_vec.size(); ++i ){
@@ -267,64 +315,10 @@ MTDeleteCmd::exec(const string& option)
       if( flag == 0 ){
         array = true;
         method = method_bak;
-        tok_vec.erase[i];
-        arr_tok_idx = i;
         break;
       }
     }
   }
-
-  if( method == index || method == random ){
-    if( tok_vec.size () == 1 ){
-
-      if( method == index ){
-        if( array ){
-          if( mtest.getArrListSize() > count ){
-            // command parsing okay; just delete.
-            mtest.deleteArr( count );
-          }else{
-            cerr << "Size of array list (" << mtest.getArrListSize()
-              << ") is <= " << count << "!!" << endl;
-            return CmdExec::errorOption(CMD_OPT_ILLEGAL,tok_vec_org[cnt_tok_idx]);
-          }
-        }else{ // "-Array" not specified, check _objList;
-          if( mtest.getObjListSize() > count ){
-            // command parsing okay; just delete.
-            mtest.deleteObj( count );
-          }else{
-            cerr << "Size of object list (" << mtest.getObjListSize()
-              << ") is <= " << count << "!!" << endl;
-            return CmdExec::errorOption(CMD_OPT_ILLEGAL,tok_vec_org[cnt_tok_idx]);
-          }
-        } // if(array) else {}
-      } else { // method == random 
-
-        if( array) {
-          if( mtest.getArrListSize() == 0 ){
-            cerr << "Size of array list is 0!!" << endl;
-            return CmdExec::errorOption(CMD_OPT_ILLEGAL,tok_vec_org[rn__tok_idx]);
-          }else{
-            for( size_t i = 0; i < count; ++i ){
-              mtest.deleteArr( rnGen( mtest.getArrListSize() ) );
-            }
-          }
-        }else {
-          if( mtest.getObjListSize() == 0 ){
-            cerr << "Size of object list is 0!!" << endl;
-            return CmdExec::errorOption(CMD_OPT_ILLEGAL,tok_vec_org[rn__tok_idx]);
-          }else{
-            for( size_t i = 0; i < count; ++i ){
-              mtest.deleteObj( rnGen( mtest.getObjListSize() ) );
-            }
-          }
-        }
-      }
-    } else { // tok_vec.size() != 1
-      method = error;
-    }
-  }
-
-
 
 
   return CMD_EXEC_DONE;
