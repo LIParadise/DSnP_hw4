@@ -306,7 +306,7 @@ MTDeleteCmd::exec(const string& option)
           cnt_tok_idx = i+1;
           tok_vec[i+1] = "";
           if( count < 0 ){
-            error_msg_arr[i+1] = index_idx_OoR;
+            error_msg_arr[i+1] = invalid__num;
           }
           break;
         }else{
@@ -335,7 +335,7 @@ MTDeleteCmd::exec(const string& option)
             cnt_tok_idx = i+1;
             tok_vec[i+1] = "";
             if( count < 0 ){
-              error_msg_arr[i+1] = rndom_idx_OoR;
+              error_msg_arr[i+1] = invalid__num;
             }
             if( count == 0 ){
               error_msg_arr[i+1] = num_is_0;
@@ -389,14 +389,12 @@ MTDeleteCmd::exec(const string& option)
 
   if( method == index ){
     if( array ){
-      if( mtest.getArrListSize() == 0 || mtest.getArrListSize()-1 < count
-          || count < 0){
+      if( mtest.getArrListSize() == 0 || mtest.getArrListSize()-1 < count){
         something_wrong = true;
         error_msg_arr[cnt_tok_idx] = index_idx_OoR;
       }
     }else{
-      if( mtest.getObjListSize() == 0 || mtest.getObjListSize()-1 < count 
-          || count < 0){
+      if( mtest.getObjListSize() == 0 || mtest.getObjListSize()-1 < count){
         something_wrong = true;
         error_msg_arr[cnt_tok_idx] = index_idx_OoR;
       }

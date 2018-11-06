@@ -177,12 +177,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 503 - ((41 * winheight(0) + 23) / 47)
+let s:l = 375 - ((24 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-503
-normal! 019|
+375
+normal! 07|
 wincmd w
 argglobal
 edit src/mem/memCmd.cpp
@@ -297,13 +297,14 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 244 - ((40 * winheight(0) + 23) / 47)
+let s:l = 399 - ((27 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-244
-normal! 025|
+399
+normal! 051|
 wincmd w
+2wincmd w
 exe 'vert 1resize ' . ((&columns * 86 + 86) / 173)
 exe 'vert 2resize ' . ((&columns * 86 + 86) / 173)
 tabedit src/mem/memTest.h
