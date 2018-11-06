@@ -44,7 +44,7 @@ badd +1 src/util/rnGen.h
 badd +84 src/util/myUsage.h
 badd +76 src/util/util.cpp
 badd +1 src/cmd/cmdParser.h
-badd +1 ./src/util/myString.cpp
+badd +66 ./src/util/myString.cpp
 badd +1 src/mem/memTest.cpp
 badd +1 src/mem/memTest.h
 badd +1 src/mem/homework_structures.cc
@@ -176,12 +176,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 344 - ((43 * winheight(0) + 23) / 47)
+let s:l = 453 - ((45 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-344
-normal! 037|
+453
+normal! 05|
 wincmd w
 argglobal
 edit src/mem/memCmd.cpp
@@ -296,13 +296,14 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 214 - ((20 * winheight(0) + 23) / 47)
+let s:l = 351 - ((9 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-214
-normal! 031|
+351
+normal! 038|
 wincmd w
+2wincmd w
 exe 'vert 1resize ' . ((&columns * 86 + 86) / 173)
 exe 'vert 2resize ' . ((&columns * 86 + 86) / 173)
 tabedit src/mem/memTest.h
@@ -429,7 +430,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 74 - ((33 * winheight(0) + 23) / 47)
+let s:l = 74 - ((27 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -935,15 +936,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 28 - ((14 * winheight(0) + 23) / 47)
+let s:l = 35 - ((34 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-28
+35
 normal! 0
 wincmd w
 argglobal
-edit ./src/util/myString.cpp
+edit src/util/rnGen.h
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -1055,11 +1056,11 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 66 - ((9 * winheight(0) + 23) / 47)
+let s:l = 8 - ((7 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-66
+8
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 85 + 86) / 173)
