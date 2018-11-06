@@ -36,8 +36,8 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 set shortmess=aoO
 badd +3 src/mem/memCmd.h
-badd +25 src/mem/memCmd.cpp
-badd +209 src/mem/memMgr.h
+badd +239 src/mem/memCmd.cpp
+badd +293 src/mem/memMgr.h
 badd +1 src/main/main.cpp
 badd +1 src/util/util.h
 badd +8 src/util/rnGen.h
@@ -48,7 +48,7 @@ badd +1 ./src/util/myString.cpp
 badd +17 src/mem/memTest.cpp
 badd +1 src/mem/memTest.h
 badd +1 src/mem/homework_structures.cc
-badd +16 homework_structures.cc
+badd +22 homework_structures.cc
 argglobal
 silent! argdel *
 argadd src/mem/memCmd.h
@@ -177,12 +177,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 438 - ((31 * winheight(0) + 23) / 47)
+let s:l = 438 - ((12 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 438
-normal! 032|
+normal! 066|
 wincmd w
 argglobal
 edit src/mem/memCmd.cpp
@@ -297,12 +297,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 239 - ((29 * winheight(0) + 23) / 47)
+let s:l = 222 - ((23 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-239
-normal! 019|
+222
+normal! 03|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 86 + 86) / 173)
 exe 'vert 2resize ' . ((&columns * 86 + 86) / 173)
@@ -683,12 +683,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 137 - ((23 * winheight(0) + 23) / 47)
+let s:l = 144 - ((25 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-137
-normal! 05|
+144
+normal! 03|
 wincmd w
 argglobal
 edit src/mem/memMgr.h
@@ -803,12 +803,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 307 - ((26 * winheight(0) + 23) / 47)
+let s:l = 455 - ((35 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-307
-normal! 012|
+455
+normal! 018|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 86 + 86) / 173)
 exe 'vert 2resize ' . ((&columns * 86 + 86) / 173)

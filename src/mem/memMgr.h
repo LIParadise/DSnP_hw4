@@ -132,9 +132,15 @@ class MemRecycleList
 #ifdef MEM_DEBUG
     assert( _first != nullptr && "MemRecycleList::popFront() error");
 #endif // MEM_DEBUG
-    T* tmp_ptr = _first;
-    _first = (T*)(*( reinterpret_cast<size_t*>(_first) ));
-    return tmp_ptr;
+    size_t* ptr = reinterpret_cast<size_t*>(_first);
+    ++ptr;
+    _first = reinterpret_cast<T*>( *ptr );
+    --ptr;
+#ifdef MEM_DEBUG
+    if( _arrSize != 0 )
+      assert( _arrSize == *ptr && "sth wrong in MemRecycleList::popFront()");
+#endif // MEM_DEBUG
+    return reinterpret_cast<T*>(ptr);
   }
   // push the element 'p' to the beginning of the recycle list
   void  pushFront(T* p) {
@@ -142,7 +148,11 @@ class MemRecycleList
 #ifdef MEM_DEBUG
     assert( p != nullptr && "MemRecycleList::pushFront() error" );
 #endif // MEM_DEBUG
+    // *((size_t*)p) is the size information for "delete []";
+    // we assume managed class have S > size_t;
+    // thus use next 8 byte to store our pointer.
     size_t* ptr = reinterpret_cast<size_t*>(p);
+    ptr ++;
     *ptr = (size_t) _first;
     _first = p;
   }
@@ -167,7 +177,8 @@ class MemRecycleList
     size_t ret = 0;
     size_t* ptr = reinterpret_cast<size_t*> (_first);
     while( ptr != nullptr ){
-      ptr = (size_t*)(*ptr);
+      ++ptr;
+      ptr = reinterpret_cast<size_t*>(*ptr);
       ++ret;
     }
     return ret;
@@ -205,18 +216,24 @@ class MemMgr
       assert(b % SIZE_T == 0);
 #ifdef MEM_DEBUG
       cout << "Resetting memMgr...(" << b << ")" << endl;
+      assert( _activeBlock != nullptr && "sth wrong in MemBlock::reset()" );
 #endif // MEM_DEBUG
-      MemBlock<T>* tmp_ptr = _activeBlock;
-      while( _activeBlock -> _nextBlock != nullptr ){
+      MemBlock<T>* tmp_ptr = nullptr;
+      while( _activeBlock -> getNextBlock() != nullptr ){
         tmp_ptr = _activeBlock;
-        _activeBlock = _activeBlock->_nextBlock;
+        _activeBlock = _activeBlock->getNextBlock();
         delete tmp_ptr;
       }
       if( b != 0 ){
         delete _activeBlock;
-        _activeBlock = new MemBlock<T> ( nullptr, b );
+        _blockSize = b;
+        _activeBlock = new MemBlock<T> ( nullptr, _blockSize );
       }else{
         _activeBlock->reset();
+        _activeBlock->_nextBlock = nullptr;
+      }
+      for( size_t i = 0; i < R_SIZE; ++i ){
+        _recycleList[i].reset();
       }
       // TODO ... done 1106 2248
     }
@@ -304,12 +321,13 @@ class MemMgr
     size_t getArraySize(size_t t) const {
       assert(t % SIZE_T == 0);
       assert(t >= S);
-      // TODO done 1104 1458
-      if( t == toSizeT( S) )
+      // TODO done 1107 0312
+      if( t == toSizeT( S ) ){
         return 0;
-      else{
-        return (t-SIZE_T)/S;
+      }else{
+        return (t-SIZE_T)/S ;
       }
+      // we assume S > SIZE_T here !!
     }
     // Go through _recycleList[m], its _nextList, and _nexList->_nextList, etc,
     //    to find a recycle list whose "_arrSize" == "n"
@@ -342,6 +360,7 @@ class MemMgr
       cout << "Calling MemMgr::getMem...(" << t << ")" << endl;
 #endif // MEM_DEBUG
       // 1. Make sure to promote t to a multiple of SIZE_T
+      size_t n = getArraySize(t);
       t = toSizeT(t);
       // 2. Check if the requested memory is greater than the block size.
       //    If so, throw a "bad_alloc()" exception.
@@ -366,7 +385,6 @@ class MemMgr
       //    #endif // MEM_DEBUG
       //    => 'n' is the size of array
       //    => "ret" is the return address
-      size_t n = getArraySize(t);
       // TODO done 1104 1543
       MemRecycleList<T>* mem_re_list_ptr = getMemRecycleList(n);
       if( mem_re_list_ptr-> _first != nullptr ){
@@ -402,8 +420,17 @@ class MemMgr
           cout << "Recycling " << ret << " to _recycleList[" << 
             getArraySize( _activeBlock->getRemainSize() ) << "]\n";
 #endif // MEM_DEBUG
-          getMemRecycleList( getArraySize( _activeBlock->getRemainSize() ))
-            -> pushFront( ret );
+          size_t remaining_size = _activeBlock->getRemainSize();
+          size_t* dirty_ptr = reinterpret_cast<size_t*>(_activeBlock->_ptr );
+          remaining_size = downtoSizeT( remaining_size ) ;
+          if( remaining_size >= S ){
+            *dirty_ptr = remaining_size / S ;
+            getMemRecycleList( getArraySize( remaining_size ) ) ->
+              pushFront( reinterpret_cast<T*> ( dirty_ptr ) );
+            _activeBlock -> _ptr = _activeBlock -> _end;
+          }else{
+            assert( 0 && "something wrong in MemMgr::getMem" );
+          }
           ret = nullptr;
         }
         _activeBlock = new MemBlock<T>( _activeBlock, _blockSize );
@@ -425,7 +452,7 @@ class MemMgr
       size_t ret = 0;
       MemBlock<T>* ptr = _activeBlock;
       while( ptr != nullptr ){
-        ptr = _activeBlock -> _nextBlock;
+        ptr = (ptr -> getNextBlock());
         ++ret;
       }
       return ret;

@@ -177,7 +177,11 @@ MTNewCmd::exec(const string& option)
         if( tok_vec.size() >= 4 ){
           return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[3] );
         }else{
-          mtest.newArrs( times, size_per_arr );
+          try{
+            mtest.newArrs( times, size_per_arr );
+          }catch( bad_alloc& ba ) {
+            return CMD_EXEC_ERROR;
+          }
         }
       }// end of (tok_vec.size() >= 3 )
     }// end of ( option == "mtn -a ..." );
@@ -430,13 +434,33 @@ MTDeleteCmd::exec(const string& option)
           return CmdExec::errorOption( CMD_OPT_MISSING,
               tok_vec_org[rn__tok_idx] );
         case index_idx_OoR:
-          cerr << "Size of object list (" << mtest.getObjListSize()
-            << ") is <= " << count << "!!" << endl;
-          return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
+          if( method == array ){
+            cerr << "Size of array list (" << mtest.getArrListSize()
+              << ") is <= " << count << "!!" << endl;
+            return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
+          }else if( method == rndom ){
+            cerr << "Size of object list (" << mtest.getObjListSize()
+              << ") is <= " << count << "!!" << endl;
+            return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
+          }else{
+#ifdef MEM_DEBUG
+            assert(0 && "sth wrong in swithc case in MTDeleteCmd" );
+#endif // MEM_DEBUG
+          }
         case rndom_idx_OoR:
-          cerr << "Size of array list (" << mtest.getObjListSize()
-            << ") is <= " << count << "!!" << endl;
-          return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
+          if( method == array ){
+            cerr << "Size of array list (" << mtest.getArrListSize()
+              << ") is <= " << count << "!!" << endl;
+            return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
+          }else if( method == rndom ){
+            cerr << "Size of object list (" << mtest.getObjListSize()
+              << ") is <= " << count << "!!" << endl;
+            return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
+          }else{
+#ifdef MEM_DEBUG
+            assert(0 && "sth wrong in swithc case in MTDeleteCmd" );
+#endif // MEM_DEBUG
+          }
         case num_is_0:
           return CmdExec::errorOption( 
               CMD_OPT_ILLEGAL, tok_vec_org[cnt_tok_idx] );
