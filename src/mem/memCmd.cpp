@@ -195,7 +195,6 @@ MTDeleteCmd::exec(const string& option)
     dummy = 0;
     index = 1;
     rndom = 2;
-    error = 3;
   } method;
 
   enum _error_msg{
@@ -205,12 +204,14 @@ MTDeleteCmd::exec(const string& option)
     no_method     = 3;
     no_index_num  = 4;      // x in "-Index x" missing
     no_rndom_num  = 5;      // y in "-Random y" missing
-    just_an_error = 6;
-  } error_msg;
+    invalid__num  = 6;
+    just_an_error = 7;
+  } ;
 
   method = dummy;
-  error_msg = okay;
+  vector<_error_msg> error_msg_arr;
   bool array = false;
+  bool something_wrong = false;
   int  count = 0;          // for 'x' in "-Index x" or "-Random x"
   int  flag  = 0;          // used in util.h::myStrNCmp
   size_t arr_tok_idx = 0;  // index for token "-Array" in tok_vec_org;
@@ -234,6 +235,10 @@ MTDeleteCmd::exec(const string& option)
   }
 
   vector<string> tok_vec_org = tok_vec;
+  error_msg_arr.resize( tok_vec.size() );
+  for( auto& it : error_msg_arr ){
+    it = okay;
+  }
 
   /* 
      use tok_vec to get required information, including that about error.
@@ -245,38 +250,36 @@ MTDeleteCmd::exec(const string& option)
 
      second, use one loop to get "-Array" flag, similar to the method in first step.
 
-     finally, we have already set up "bool error" flag,
+     finally, check if there's error.
      try to find the error in tok_vec accordingly.
      */
 
-  // first step, we try "-Index x" here.
+  // first step, part I, we try "-Index x" here.
   for( size_t i = 1; i < tok_vec.size(); ++i ){
     flag = myStrNCmp( "-Index", tok_vec[i], 2 );
     if( flag == 0 ){
       tok_vec[i]  = "";
       idx_tok_idx = i;
       if( i == tok_vec.size() - 1 ){
-        error_msg = no_index_num;
-        method = error;
+        error_msg_arr[i] = no_index_num;
         break;
-      }else{
+      }else{ // "-Index tok"
         if( myStr2Int( tok_vec[i+1], count ) ){ // "-Index x" found
           method = index;
-          error_msg = okay;
           cnt_tok_idx = i+1;
           tok_vec[i+1] = "";
           break;
         }else{
           // "-Index tok" where "tok" is not a valid number;
-          error_msg = no_index_num;
-          method = error;
+          error_msg[i+1] = invalid__num;
+          tok_vec[i+1] = "";
           break;
         }
       } // if( i == tok_vec.size() -1 ) else {}
     }// if "-Index"
   }
 
-  // first step, we try "-Random x" here.
+  // first step part II, we try "-Random x" here.
   if( method == dummy ){
     for( size_t i = 1; i < tok_vec.size(); ++i ){
       flag = myStrNCmp( "-Random", tok_vec[i], 2 );
@@ -284,38 +287,61 @@ MTDeleteCmd::exec(const string& option)
         tok_vec[i]  = "";
         rn__tok_idx = i;
         if( i == tok_vec.size() - 1 ){
-          error_msg = no_rndom_num;
-          method = error;
+          error_msg_arr[i] = no_rndom_num;
           break;
-        }else{
+        }else{ // "-Random tok"
           if( myStr2Int( tok_vec[i+1], count ) ){ // "-Random x" found
             method = rndom;
-            error_msg = okay;
             cnt_tok_idx = i+1;
             tok_vec[i+1] = "";
             break;
           }else{
-            // "-Index tok" where "tok" is not a valid number;
-            error_msg = no_rndom_num;
-            method = error;
+            // "-Random tok" where "tok" is not a valid number;
+            error_msg[i+1] = invalid__num;
+            tok_vec[i+1] = "";
             break;
           }
         } // if( i == tok_vec.size() -1 ) else {}
-      }// if "-Random"
-    } // for loop
+      }// if "-Index"
+    }
   }// if ( method == dummy );
+
+  if( method != index && method != rndom )
+    error_msg_arr[0] = no_method;
 
 
   // second, use loop to get "-Array" flag
-  if( method == index || method == rndom ){
-    _method method_bak = method;
-    method = error;
-    for( size_t i = 1; i < tok_vec.size(); ++i ){
-      flag = myStrNCmp( "-Array", tok_vec[i], 2 );
-      if( flag == 0 ){
-        array = true;
-        method = method_bak;
-        break;
+  for( size_t i = 1; i < tok_vec.size(); ++i ){
+    flag = myStrNCmp( "-Array", tok_vec[i], 2 );
+    if( flag == 0 ){
+      array = true;
+      arr_tok_idx = i;
+      tok_vec[i] = "";
+      break;
+    }
+  }
+
+  // third, check if there's error happened.
+  for(auto it = tok_vec.begin(); it != tok_vec.end(); ){
+    if( *it == "" )
+      tok_vec.erase( it );
+    else
+      ++it;
+  }
+  if( tok_vec.size() > 1 )
+    something_wrong = true;
+
+  for( auto& it : error_msg_arr ){
+    if( it != okay ){
+      something_wrong = true;
+      break;
+    }
+  }
+
+  if( something_wrong ){
+    for( auto& it : error_msg_arr ){
+      switch( it ){
+        case arr_s // now working....
       }
     }
   }
