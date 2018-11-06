@@ -22,8 +22,7 @@ using namespace std;
 //--------------------------------------------------------------------------
 // Define MACROs
 //--------------------------------------------------------------------------
-#define MEM_MGR_INIT(T) \
-  MemMgr<T>* const T::_memMgr = new MemMgr<T>
+#define MEM_MGR_INIT( T )  MemMgr<T>* const T::_memMgr = new MemMgr<T>
 
 #define USE_MEM_MGR(T)                                                   \
   public:                                                                \
@@ -40,14 +39,15 @@ static MemMgr<T>* const _memMgr
 // make your code 64/32-bit platform independent.
 // DO NOT use 4 or 8 for sizeof(size_t) in your code
 //
-#define SIZE_T      sizeof(size_t)
+#define SIZE_T      (sizeof(size_t))
 #define SIZE_T_1    (sizeof(size_t) - 1)
 
 // TODO: Define them by SIZE_T and/or SIZE_T_1 MACROs.
 //
 // To promote 't' to the nearest multiple of SIZE_T; 
 // e.g. Let SIZE_T = 8;  toSizeT(7) = 8, toSizeT(12) = 16
-#define toSizeT(t)      ( (t%(SIZE_T)) ? (  SIZE_T * ( t / (SIZE_T) ) + SIZE_T ) : t ) // TODO ...done 10/30 12:50
+#define toSizeT(t)      ( (t%( sizeof(size_t) )) ? (t-(t%(sizeof(size_t)))+sizeof(size_t)):t) 
+// TODO ...done 10/30 12:50
 //
 // To demote 't' to the nearest multiple of SIZE_T
 // e.g. Let SIZE_T = 8;  downtoSizeT(9) = 8, downtoSizeT(100) = 96
@@ -94,7 +94,7 @@ class MemBlock
       ret = nullptr;
       return false;
     }
-    ret = _ptr;
+    ret = reinterpret_cast<T*>(_ptr);
     _ptr = _ptr + t;
     return true;
   }
@@ -133,7 +133,7 @@ class MemRecycleList
     assert( _first != nullptr && "MemRecycleList::popFront() error");
 #endif // MEM_DEBUG
     T* tmp_ptr = _first;
-    _first = *_first;
+    _first = (T*)(*( reinterpret_cast<size_t*>(_first) ));
     return tmp_ptr;
   }
   // push the element 'p' to the beginning of the recycle list
@@ -165,7 +165,7 @@ class MemRecycleList
   size_t numElm() const {
     // TODO done 1104 0346
     size_t ret = 0;
-    size_t* ptr = reinterpret_cast<size_t*>_first;
+    size_t* ptr = reinterpret_cast<size_t*> (_first);
     while( ptr != nullptr ){
       ptr = (size_t*)(*ptr);
       ++ret;
@@ -206,7 +206,19 @@ class MemMgr
 #ifdef MEM_DEBUG
       cout << "Resetting memMgr...(" << b << ")" << endl;
 #endif // MEM_DEBUG
-      // TODO
+      MemBlock<T>* tmp_ptr = _activeBlock;
+      while( _activeBlock -> _nextBlock != nullptr ){
+        tmp_ptr = _activeBlock;
+        _activeBlock = _activeBlock->_nextBlock;
+        delete tmp_ptr;
+      }
+      if( b != 0 ){
+        delete _activeBlock;
+        _activeBlock = new MemBlock<T> ( nullptr, b );
+      }else{
+        _activeBlock->reset();
+      }
+      // TODO ... done 1106 2248
     }
     // Called by new
     T* alloc(size_t t) {
@@ -294,6 +306,7 @@ class MemMgr
         return 0;
       else{
         return (t-SIZE_T)/S;
+      }
     }
     // Go through _recycleList[m], its _nextList, and _nexList->_nextList, etc,
     //    to find a recycle list whose "_arrSize" == "n"
@@ -379,19 +392,20 @@ class MemMgr
       // TODO done 1104 1544
 
       if( !_activeBlock->getMem( t, ret )){
-        // no enough space in (*_activeBlock), try put them in _recycleList;
+        // no enough space in (*_activeBlock),
+        // try put remained space in (*_activeBlock) to _recycleList;
         if( _activeBlock->getRemainSize() >= toSizeT( S ) ){
           // push current remaining space to corresponding _recycleList[x];
 #ifdef MEM_DEBUG
-          ret = _activeBlock -> _ptr;
+          ret = reinterpret_cast<T*>(_activeBlock -> _ptr);
           cout << "Recycling " << ret << " to _recycleList[" << 
             getArraySize( _activeBlock->getRemainSize() ) << "]\n";
           ret = nullptr;
 #endif // MEM_DEBUG
           getMemRecycleList( getArraySize( _activeBlock->getRemainSize() ))
-            -> pushFront( _ptr );
+            -> pushFront( ret );
         }
-        _activeBlock = new MemBlock( _activeBlock, _blockSize );
+        _activeBlock = new MemBlock<T>( _activeBlock, _blockSize );
 #ifdef MEM_DEBUG
         cout << "New MemBlock... " << _activeBlock << endl;
 #endif // MEM_DEBUG
