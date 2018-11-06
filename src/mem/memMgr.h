@@ -356,6 +356,7 @@ class MemMgr
       }catch ( bad_alloc& bd ){
         cerr << "Requested memory (" << t << ") is greater than block size"
           << "(" << _blockSize << "). Exception raised...\n";
+        throw;
       }
 
       // 3. Check the _recycleList first...
@@ -400,10 +401,10 @@ class MemMgr
           ret = reinterpret_cast<T*>(_activeBlock -> _ptr);
           cout << "Recycling " << ret << " to _recycleList[" << 
             getArraySize( _activeBlock->getRemainSize() ) << "]\n";
-          ret = nullptr;
 #endif // MEM_DEBUG
           getMemRecycleList( getArraySize( _activeBlock->getRemainSize() ))
             -> pushFront( ret );
+          ret = nullptr;
         }
         _activeBlock = new MemBlock<T>( _activeBlock, _blockSize );
 #ifdef MEM_DEBUG

@@ -131,7 +131,11 @@ MTNewCmd::exec(const string& option)
             }else if( size_per_arr < 0 ){
               return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[2]);
             }else{
-              mtest.newArrs( times, size_per_arr );
+              try{
+                mtest.newArrs( times, size_per_arr );
+              }catch( bad_alloc& ba ) {
+                return CMD_EXEC_ERROR;
+              }
               return CMD_EXEC_DONE;
             }
           } // end of if (tok_vec[2] is a number );
@@ -218,6 +222,7 @@ MTDeleteCmd::exec(const string& option)
     no_rndom_num  ,      // y in "-Random y" missing
     index_idx_OoR ,      // x in "-Index x" out of range
     rndom_idx_OoR ,      // y in "-Index y" out of range 
+    num_is_0      ,      // delete zero elements, happens when "-Random";
     invalid__num  ,      // 'tok' in "-Index tok" or "-Random tok" invalid
     just_an_error ,
   };
@@ -229,6 +234,7 @@ MTDeleteCmd::exec(const string& option)
     "no_rndom_times_specified",
     "index_#_out_of_range",
     "rndom_#_out_of_range",
+    "delete_zero_elements???",
     "invalid_number",
     "just_an_error"
   };
@@ -255,7 +261,7 @@ MTDeleteCmd::exec(const string& option)
   }while ( pos != string :: npos );
   // tok_vec now stores tokenized "const string& option"
 
-  if( tok_vec.size() == 1 ){
+  if( tok_vec.size() == 0 ){
     return CmdExec::errorOption( CMD_OPT_MISSING, "" );
   }
 
@@ -325,6 +331,9 @@ MTDeleteCmd::exec(const string& option)
             if( count < 0 ){
               error_msg_arr[i+1] = rndom_idx_OoR;
             }
+            if( count == 0 ){
+              error_msg_arr[i+1] = num_is_0;
+            }
             break;
           }else{
             // "-Random tok" where "tok" is not a valid number;
@@ -371,21 +380,6 @@ MTDeleteCmd::exec(const string& option)
     }
   }
 
-  if( method == rndom ){
-    if( array ){
-      if( mtest.getArrListSize() == 0 ){
-        something_wrong = true;
-        error_msg_arr[cnt_tok_idx] = rndom_idx_OoR;
-      }
-    }else{
-      if( mtest.getObjListSize() == 0 ){
-        something_wrong = true;
-        error_msg_arr[cnt_tok_idx] = rndom_idx_OoR;
-      }
-    }
-  }
-
-
   // third, check if there's error happened.
   for(size_t i = 0; i < tok_vec.size(); ++i){
     if( tok_vec[i] != "" ){
@@ -411,11 +405,13 @@ MTDeleteCmd::exec(const string& option)
       if( i%5 == 0 && i != 0 )
         cerr << endl;
     }
+    cerr << endl;
     for( size_t i = 0; i < error_msg_arr.size(); ++i ){
       cerr << _error_msg_Human[error_msg_arr[i]] << '\t';
       if( i%5 == 0 && i != 0 )
         cerr << endl;
     }
+    cerr << endl;
 #endif // MEM_DEBUG
     for( size_t i = 0; i < tok_vec_org.size(); ++i ){
       switch( error_msg_arr[i] ){ // now working....
@@ -434,13 +430,16 @@ MTDeleteCmd::exec(const string& option)
           return CmdExec::errorOption( CMD_OPT_MISSING,
               tok_vec_org[rn__tok_idx] );
         case index_idx_OoR:
-          cerr << "Size of object list is " << mtest.getObjListSize()
-            << "!!" << endl;
+          cerr << "Size of object list (" << mtest.getObjListSize()
+            << ") is <= " << count << "!!" << endl;
           return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
         case rndom_idx_OoR:
-          cerr << "Size of array list is " << mtest.getArrListSize()
-            << "!!" << endl;
+          cerr << "Size of array list (" << mtest.getObjListSize()
+            << ") is <= " << count << "!!" << endl;
           return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
+        case num_is_0:
+          return CmdExec::errorOption( 
+              CMD_OPT_ILLEGAL, tok_vec_org[cnt_tok_idx] );
         case invalid__num:
           return CmdExec::errorOption( CMD_OPT_ILLEGAL,
               tok_vec_org[i] );
