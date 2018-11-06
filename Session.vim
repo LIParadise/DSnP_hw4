@@ -177,12 +177,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 387 - ((16 * winheight(0) + 23) / 47)
+let s:l = 474 - ((17 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-387
-normal! 09|
+474
+normal! 019|
 wincmd w
 argglobal
 edit src/mem/memCmd.cpp
@@ -297,12 +297,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 80 - ((6 * winheight(0) + 23) / 47)
+let s:l = 139 - ((0 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-80
-normal! 0
+139
+normal! 024|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 86 + 86) / 173)
 exe 'vert 2resize ' . ((&columns * 86 + 86) / 173)
@@ -430,11 +430,11 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 100 - ((40 * winheight(0) + 23) / 47)
+let s:l = 26 - ((22 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-100
+26
 normal! 0
 wincmd w
 argglobal
@@ -550,11 +550,11 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 38 - ((0 * winheight(0) + 23) / 47)
+let s:l = 61 - ((3 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-38
+61
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 86 + 86) / 173)
@@ -690,11 +690,11 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 53 - ((13 * winheight(0) + 11) / 23)
+let s:l = 16 - ((4 * winheight(0) + 11) / 23)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-53
+16
 normal! 0
 wincmd w
 argglobal
@@ -810,12 +810,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 191 - ((7 * winheight(0) + 11) / 23)
+let s:l = 140 - ((6 * winheight(0) + 11) / 23)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-191
-normal! 037|
+140
+normal! 09|
 wincmd w
 argglobal
 edit src/mem/memMgr.h
@@ -930,12 +930,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 216 - ((33 * winheight(0) + 23) / 47)
+let s:l = 262 - ((31 * winheight(0) + 23) / 47)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-216
-normal! 028|
+262
+normal! 015|
 wincmd w
 3wincmd w
 exe '1resize ' . ((&lines * 23 + 25) / 50)

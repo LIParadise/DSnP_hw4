@@ -101,19 +101,23 @@ MTNewCmd::exec(const string& option)
   int flag = 0;
 
   if( myStr2Int( tok_vec[0], times ) ){ // "mtn x -a y" or "mtn x";
+    if( times <= 0 ){
+      return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[0] );
+    }
     if( tok_vec.size() == 1 ){
       mtest.newObjs( times );
       return CMD_EXEC_DONE;
-    }else{ // tok_vec.size() >= 2; "mtn x ...";
+    }else{ // tok_vec.size() >= 2; "mtn x tok" where tok != "" and 'x' valid.
       // check if "-Array" is specified.
 
       flag = myStrNCmp( "-Array", tok_vec[1], 2 );
       if( flag != 0 ){
         // extra option
-        return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[2] );
+        // eg: "mtn 30 -big_boob"
+        return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[1] );
       }else{
-        // tok_vec[2] matches "-Array", check size_per_arr;
-        // "mtn x -a"...
+        // tok_vec[1] matches "-Array", check size_per_arr;
+        // "mtn x -a..."
 
         if( tok_vec.size() == 2 ){
           // "mtn x -a"
@@ -124,6 +128,8 @@ MTNewCmd::exec(const string& option)
           }else{
             if( tok_vec.size() >= 4 ){
               return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[3] );
+            }else if( size_per_arr < 0 ){
+              return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[2]);
             }else{
               mtest.newArrs( times, size_per_arr );
               return CMD_EXEC_DONE;
@@ -141,27 +147,35 @@ MTNewCmd::exec(const string& option)
       if( tok_vec.size() == 1 ){
         return CmdExec::errorOption( CMD_OPT_MISSING, tok_vec[0] );
       }else if( tok_vec.size () == 2 ){
-        if( ! myStr2Int( tok_vec.back(), times ) ){
+        if( ! myStr2Int( tok_vec.back(), size_per_arr ) ){
           // "mtn -a not_a_num"
           return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec.back() );
         }else{
           // "mtn -a x"
-          return CmdExec::errorOption( CMD_OPT_MISSING, "" );
+          if( size_per_arr > 0 ){
+            return CmdExec::errorOption( CMD_OPT_MISSING, "" );
+          }else{
+            return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[1] );
+          }
         }
-      }else{ // tok_vec.size() >= 3
+      }else{ // tok_vec.size() >= 3; "mtn -arr tok_a tok_b" where tok_b != "";
         if( ! myStr2Int( tok_vec[1], size_per_arr ) ){
           return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[1] );
         }
-        if( !myStr2Int( tok_vec[3], times )){
-          return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[3] );
+        if( size_per_arr <= 0 )
+          return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[1] );
+        if( !myStr2Int( tok_vec[2], times )){
+          return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[2] );
         }
+        if( times < 0 )
+          return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[2] );
         // "const string& option" shall be "mtn -a x y ..." now
         if( tok_vec.size() >= 4 ){
           return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[3] );
         }else{
           mtest.newArrs( times, size_per_arr );
         }
-      }// end of (tok_vec.size() >= 4 )
+      }// end of (tok_vec.size() >= 3 )
     }// end of ( option == "mtn -a ..." );
   } // end of if( "mtn x ..." ) else ( "mtn -arr" ) {}
 

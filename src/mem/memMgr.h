@@ -252,6 +252,9 @@ class MemMgr
       // Get the array size 'n' stored by system,
       // which is also the _recycleList index
       size_t n = 0;
+      // it's the offset-ed version by system.
+      size_t* ptr = reinterpret_cast<size_t*>( p );
+      n = *ptr;
 #ifdef MEM_DEBUG
       cout << ">> Array size = " << n << endl;
       cout << "Recycling " << p << " to _recycleList[" << n << "]" << endl;
@@ -319,9 +322,6 @@ class MemMgr
     MemRecycleList<T>* getMemRecycleList(size_t n) {
       size_t m = n % R_SIZE;
       // TODO done 1104 0333
-#ifdef MEM_DEBUG
-      assert( n != 0 && "getMemRecycleList bug" );
-#endif // MEM_DEBUG
       MemRecycleList<T>* ptr = &(_recycleList[m]);
       while( ptr -> _arrSize != n ){
         if( ptr -> _nextList == nullptr ){
