@@ -128,7 +128,7 @@ MTNewCmd::exec(const string& option)
           }else{
             if( tok_vec.size() >= 4 ){
               return CmdExec::errorOption( CMD_OPT_EXTRA, tok_vec[3] );
-            }else if( size_per_arr < 0 ){
+            }else if( size_per_arr <= 0 ){
               return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec[2]);
             }else{
               try{
@@ -228,6 +228,7 @@ MTDeleteCmd::exec(const string& option)
     rndom_idx_OoR ,      // y in "-Index y" out of range 
     num_is_0      ,      // delete zero elements, happens when "-Random";
     invalid__num  ,      // 'tok' in "-Index tok" or "-Random tok" invalid
+    i_have_no_cash,      // requested thing have size == 0, either obj or arr.
     just_an_error ,
   };
 
@@ -240,6 +241,7 @@ MTDeleteCmd::exec(const string& option)
     "rndom_#_out_of_range",
     "delete_zero_elements???",
     "invalid_number",
+    "i_have_no_money_QQ",
     "just_an_error"
   };
 
@@ -368,6 +370,23 @@ MTDeleteCmd::exec(const string& option)
     something_wrong = true;
   }
 
+  if( mtest.getArrListSize() == 0 ){
+    if( array && method == index )
+      error_msg_arr[idx_tok_idx] = i_have_no_cash;
+    else if( array && method == rndom )
+      error_msg_arr[rn__tok_idx] = i_have_no_cash;
+    something_wrong = true;
+  }
+
+  if( mtest.getObjListSize() == 0 ){
+    if( method == index )
+      error_msg_arr[idx_tok_idx] = i_have_no_cash;
+    else if( array && method == rndom )
+      error_msg_arr[rn__tok_idx] = i_have_no_cash;
+    something_wrong = true;
+  }
+
+
   if( method == index ){
     if( array ){
       if( mtest.getArrListSize() == 0 || mtest.getArrListSize()-1 < count
@@ -390,8 +409,6 @@ MTDeleteCmd::exec(const string& option)
       error_msg_arr[i] = just_an_error;
     }
   }
-  if( !tok_vec.empty() )
-    something_wrong = true;
 
   if( something_wrong == false ){
     for( auto& it : error_msg_arr ){
@@ -467,6 +484,23 @@ MTDeleteCmd::exec(const string& option)
         case invalid__num:
           return CmdExec::errorOption( CMD_OPT_ILLEGAL,
               tok_vec_org[i] );
+        case i_have_no_cash:
+          if( array )
+            cerr << "Size of array list is " << mtest.getArrListSize()
+              << "!!" << endl;
+          else
+            cerr << "size of object list is " << mtest.getObjListSize()
+              << "!!" << endl;
+          if( method == index )
+            return CmdExec::errorOption( CMD_OPT_ILLEGAL, 
+                tok_vec_org[ idx_tok_idx ] );
+          else if( method == rndom )
+            return CmdExec::errorOption( CMD_OPT_ILLEGAL, 
+                tok_vec_org[ rn__tok_idx ] );
+          else
+#ifdef MEM_DEBUG
+            assert( 0 && "sth wrong in case i_have_no_cash" );
+#endif // MEM_DEBUG
         case just_an_error:
           return CmdExec::errorOption( CMD_OPT_ILLEGAL,
               tok_vec_org[i] );
