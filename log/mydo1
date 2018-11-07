@@ -196,7 +196,7 @@ xxxxxxxxxox
 
 mtest> mtdel -i 12 -a
 Size of array list (11) is <= 12!!
-Error: Illegal option!! (-i)
+Error: Illegal option!! (12)
 
 mtest> mtp
 =========================================

@@ -320,37 +320,42 @@ MTDeleteCmd::exec(const string& option)
   }
 
   // first step part II, we try "-Random x" here.
-  if( method == dummy ){
-    for( size_t i = 0; i < tok_vec.size(); ++i ){
-      flag = myStrNCmp( "-Random", tok_vec[i], 2 );
-      if( flag == 0 ){
-        tok_vec[i]  = "";
-        rn__tok_idx = i;
-        if( i == tok_vec.size() - 1 ){
-          error_msg_arr[i] = no_rndom_num;
-          break;
-        }else{ // "-Random tok"
-          if( myStr2Int( tok_vec[i+1], count ) ){ // "-Random x" found
-            method = rndom;
-            cnt_tok_idx = i+1;
-            tok_vec[i+1] = "";
-            if( count < 0 ){
-              error_msg_arr[i+1] = invalid__num;
-            }
-            if( count == 0 ){
-              error_msg_arr[i+1] = num_is_0;
-            }
+  for( size_t i = 0; i < tok_vec.size(); ++i ){
+    flag = myStrNCmp( "-Random", tok_vec[i], 2 );
+    if( flag == 0 ){
+      tok_vec[i]  = "";
+      rn__tok_idx = i;
+      if( i == tok_vec.size() - 1 ){
+        error_msg_arr[i] = no_rndom_num;
+        break;
+      }else{ // "-Random tok"
+        if( myStr2Int( tok_vec[i+1], count ) ){ // "-Random x" found
+          if( method == index && i > idx_tok_idx ){
+            error_msg_arr[i] = just_an_error;
             break;
+          }else if( method == index && i < idx_tok_idx ){
+            error_msg_arr[idx_tok_idx] = just_an_error;
           }else{
-            // "-Random tok" where "tok" is not a valid number;
-            error_msg_arr[i+1] = invalid__num;
-            tok_vec[i+1] = "";
-            break;
           }
-        } // if( i == tok_vec.size() -1 ) else {}
-      }// if "-Index"
-    }
-  }// if ( method == dummy );
+          method = rndom;
+          cnt_tok_idx = i+1;
+          tok_vec[i+1] = "";
+          if( count < 0 ){
+            error_msg_arr[i+1] = invalid__num;
+          }
+          if( count == 0 ){
+            error_msg_arr[i+1] = num_is_0;
+          }
+          break;
+        }else{
+          // "-Random tok" where "tok" is not a valid number;
+          error_msg_arr[i+1] = invalid__num;
+          tok_vec[i+1] = "";
+          break;
+        }
+      } // if( i == tok_vec.size() -1 ) else {}
+    }// if "-Index"
+  }
 
 
   // second, use loop to get "-Array" flag
@@ -370,39 +375,6 @@ MTDeleteCmd::exec(const string& option)
     something_wrong = true;
   }
 
-  if( mtest.getArrListSize() == 0 ){
-    if( array && method == index )
-      error_msg_arr[idx_tok_idx] = i_have_no_cash;
-    else if( array && method == rndom )
-      error_msg_arr[rn__tok_idx] = i_have_no_cash;
-    something_wrong = true;
-  }
-
-  if( mtest.getObjListSize() == 0 ){
-    if( !array && method == index )
-      error_msg_arr[idx_tok_idx] = i_have_no_cash;
-    else if( !array && method == rndom )
-      error_msg_arr[rn__tok_idx] = i_have_no_cash;
-    something_wrong = true;
-  }
-
-
-  if( method == index ){
-    if( array ){
-      if( mtest.getArrListSize()-1 < count){
-        something_wrong = true;
-        if( error_msg_arr[idx_tok_idx] == okay )
-          error_msg_arr[idx_tok_idx] = index_idx_OoR;
-      }
-    }else{
-      if( mtest.getObjListSize()-1 < count){
-        something_wrong = true;
-        if( error_msg_arr[idx_tok_idx] == okay )
-          error_msg_arr[idx_tok_idx] = index_idx_OoR;
-      }
-    }
-  }
-
   // third, check if there's error happened.
   for(size_t i = 0; i < tok_vec.size(); ++i){
     if( tok_vec[i] != "" ){
@@ -418,6 +390,43 @@ MTDeleteCmd::exec(const string& option)
       }
     }
   }
+
+  // semantic-false are of lower priority to point out.
+  if( something_wrong == false ){
+
+    if( mtest.getArrListSize() == 0 ){
+      if( array && method == index )
+        error_msg_arr[idx_tok_idx] = i_have_no_cash;
+      else if( array && method == rndom )
+        error_msg_arr[rn__tok_idx] = i_have_no_cash;
+      something_wrong = true;
+    }
+
+    if( mtest.getObjListSize() == 0 ){
+      if( !array && method == index )
+        error_msg_arr[idx_tok_idx] = i_have_no_cash;
+      else if( !array && method == rndom )
+        error_msg_arr[rn__tok_idx] = i_have_no_cash;
+      something_wrong = true;
+    }
+
+    if( method == index ){
+      if( array ){
+        if( mtest.getArrListSize()-1 < count){
+          something_wrong = true;
+          if( error_msg_arr[idx_tok_idx] == okay )
+            error_msg_arr[cnt_tok_idx] = index_idx_OoR;
+        }
+      }else{
+        if( mtest.getObjListSize()-1 < count){
+          something_wrong = true;
+          if( error_msg_arr[idx_tok_idx] == okay )
+            error_msg_arr[cnt_tok_idx] = index_idx_OoR;
+        }
+      }
+    }
+  }
+  // end of checking semantic falses.
 
   if( something_wrong ){
 #ifdef MEM_DEBUG
@@ -451,32 +460,24 @@ MTDeleteCmd::exec(const string& option)
           return CmdExec::errorOption( CMD_OPT_MISSING,
               tok_vec_org[rn__tok_idx] );
         case index_idx_OoR:
-          if( method == array ){
+          if( array ){
             cerr << "Size of array list (" << mtest.getArrListSize()
               << ") is <= " << count << "!!" << endl;
             return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
-          }else if( method == rndom ){
+          }else {
             cerr << "Size of object list (" << mtest.getObjListSize()
               << ") is <= " << count << "!!" << endl;
             return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
-          }else{
-#ifdef MEM_DEBUG
-            assert(0 && "sth wrong in swithc case in MTDeleteCmd" );
-#endif // MEM_DEBUG
           }
         case rndom_idx_OoR:
-          if( method == array ){
+          if( array ){
             cerr << "Size of array list (" << mtest.getArrListSize()
               << ") is <= " << count << "!!" << endl;
             return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
-          }else if( method == rndom ){
+          }else{
             cerr << "Size of object list (" << mtest.getObjListSize()
               << ") is <= " << count << "!!" << endl;
             return CmdExec::errorOption( CMD_OPT_ILLEGAL, tok_vec_org[i] );
-          }else{
-#ifdef MEM_DEBUG
-            assert(0 && "sth wrong in swithc case in MTDeleteCmd" );
-#endif // MEM_DEBUG
           }
         case num_is_0:
           return CmdExec::errorOption( 
@@ -485,15 +486,34 @@ MTDeleteCmd::exec(const string& option)
           return CmdExec::errorOption( CMD_OPT_ILLEGAL,
               tok_vec_org[i] );
         case i_have_no_cash:
-          if( array )
-            cerr << "Size of array list is " << mtest.getArrListSize()
-              << "!!" << endl;
-          else
-            cerr << "size of object list is " << mtest.getObjListSize()
-              << "!!" << endl;
+          if( array ){
+            if( method == rndom ){
+              cerr << "Size of array list is " << mtest.getArrListSize()
+                << "!!" << endl;
+            }else if( method == index ){
+              cerr << "Size of array list (" << mtest.getArrListSize()
+                << ") is <= " << count << "!!" << endl;
+            }else{
+#ifdef MEM_DEBUG
+              assert( 0 && "sth wrong with enum i_have_no_cash" );
+#endif // MEM_DEBUG
+            }
+          }else{
+            if( method == rndom ){
+              cerr << "Size of object list is " << mtest.getObjListSize()
+                << "!!" << endl;
+            }else if( method == index ){
+              cerr << "Size of object list (" << mtest.getObjListSize()
+                << ") is <= " << count << "!!" << endl;
+            }else{
+#ifdef MEM_DEBUG
+              assert( 0 && "sth wrong with enum i_have_no_cash" );
+#endif // MEM_DEBUG
+            }
+          }
           if( method == index )
             return CmdExec::errorOption( CMD_OPT_ILLEGAL, 
-                tok_vec_org[ idx_tok_idx ] );
+                tok_vec_org[ cnt_tok_idx ] );
           else if( method == rndom )
             return CmdExec::errorOption( CMD_OPT_ILLEGAL, 
                 tok_vec_org[ rn__tok_idx ] );
@@ -502,6 +522,12 @@ MTDeleteCmd::exec(const string& option)
             assert( 0 && "sth wrong in case i_have_no_cash" );
 #endif // MEM_DEBUG
         case just_an_error:
+          if( method == index || method == rndom ){
+            if( cnt_tok_idx != 0 && i > cnt_tok_idx ){
+              return CmdExec::errorOption( CMD_OPT_EXTRA,
+                  tok_vec_org[i] );
+            }
+          }
           return CmdExec::errorOption( CMD_OPT_ILLEGAL,
               tok_vec_org[i] );
         default:
