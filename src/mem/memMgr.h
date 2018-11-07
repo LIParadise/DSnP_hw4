@@ -322,7 +322,7 @@ class MemMgr
       assert(t % SIZE_T == 0);
       assert(t >= S);
       // TODO done 1107 0312
-      if( t == toSizeT( S ) ){
+      if( t == S ){
         return 0;
       }else{
         return (t-SIZE_T)/S ;
