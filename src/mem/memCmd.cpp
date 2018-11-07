@@ -379,9 +379,9 @@ MTDeleteCmd::exec(const string& option)
   }
 
   if( mtest.getObjListSize() == 0 ){
-    if( method == index )
+    if( !array && method == index )
       error_msg_arr[idx_tok_idx] = i_have_no_cash;
-    else if( array && method == rndom )
+    else if( !array && method == rndom )
       error_msg_arr[rn__tok_idx] = i_have_no_cash;
     something_wrong = true;
   }
@@ -389,14 +389,16 @@ MTDeleteCmd::exec(const string& option)
 
   if( method == index ){
     if( array ){
-      if( mtest.getArrListSize() == 0 || mtest.getArrListSize()-1 < count){
+      if( mtest.getArrListSize()-1 < count){
         something_wrong = true;
-        error_msg_arr[cnt_tok_idx] = index_idx_OoR;
+        if( error_msg_arr[idx_tok_idx] == okay )
+          error_msg_arr[idx_tok_idx] = index_idx_OoR;
       }
     }else{
-      if( mtest.getObjListSize() == 0 || mtest.getObjListSize()-1 < count){
+      if( mtest.getObjListSize()-1 < count){
         something_wrong = true;
-        error_msg_arr[cnt_tok_idx] = index_idx_OoR;
+        if( error_msg_arr[idx_tok_idx] == okay )
+          error_msg_arr[idx_tok_idx] = index_idx_OoR;
       }
     }
   }
@@ -526,9 +528,9 @@ MTDeleteCmd::exec(const string& option)
   }else if ( method == index ){
     assert( index >= 0 && "didn't exclude case (index < 0), = =." );
     if( array ){
-      mtest.deleteArr( index );
+      mtest.deleteArr( count );
     }else
-      mtest.deleteObj( index );
+      mtest.deleteObj( count );
   }
 
   return CMD_EXEC_DONE;

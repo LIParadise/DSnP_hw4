@@ -1,0 +1,11 @@
+mtn 10
+mtp
+mtn 5 -a 256
+mtp
+mtn 5 -a 512
+mtp
+mtd -i 7 -a
+mtp
+mtd -i 0 -a
+mtp
+q -f
