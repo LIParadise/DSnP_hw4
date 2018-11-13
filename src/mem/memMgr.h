@@ -413,7 +413,7 @@ class MemMgr
       if( !_activeBlock->getMem( t, ret )){
         // no enough space in (*_activeBlock),
         // try put remained space in (*_activeBlock) to _recycleList;
-        if( _activeBlock->getRemainSize() >= toSizeT( S ) ){
+        if( _activeBlock->getRemainSize() >= ( S ) ){
           // push current remaining space to corresponding _recycleList[x];
 #ifdef MEM_DEBUG
           ret = reinterpret_cast<T*>(_activeBlock -> _ptr);
@@ -422,9 +422,8 @@ class MemMgr
 #endif // MEM_DEBUG
           size_t remaining_size = _activeBlock->getRemainSize();
           size_t* dirty_ptr = reinterpret_cast<size_t*>(_activeBlock->_ptr );
-          remaining_size = downtoSizeT( remaining_size ) ;
           if( remaining_size >= S ){
-            *dirty_ptr = remaining_size / S ;
+            *dirty_ptr = getArraySize( remaining_size );
             getMemRecycleList( getArraySize( remaining_size ) ) ->
               pushFront( reinterpret_cast<T*> ( dirty_ptr ) );
             _activeBlock -> _ptr = _activeBlock -> _end;
